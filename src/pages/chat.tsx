@@ -1,11 +1,67 @@
 import type { NextPage } from 'next'
 import { useRouter, Router } from 'next/router'
+import React, { useEffect, useState } from 'react';
+import * as uuid from 'uuid';
+
+import io from 'socket.io-client';
+
+interface Message {
+    id: string;
+    name: string;
+    text: string;
+}
+
+interface Payload {
+    name: string;
+    text: string;
+}
+
+const socket = io('http://localhost:3333');
 
 const Chat: NextPage = () => {
 
   const router = useRouter()
   const {id} = router.query
   console.log("ID SALA: ", id);
+
+  const [title] = useState('Chat Web');
+  const [name, setName] = useState('');
+  const [text, setText] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+
+    function receivedMessage(message: Payload) {
+        const newMessage: Message = {
+            id: uuid,
+            name: message.name,
+            text: message.text,
+        }
+
+        setMessages([...messages, newMessage]);
+    }
+
+    socket.on('msgToClient', (message: Payload) => {
+        receivedMessage(message);
+    })
+
+  }, [messages, name, text]);
+
+  function validateInput() {
+      return name.length > 0 && text.length > 0;
+  }
+
+  function sendMessage() {
+    if (validateInput()) {
+        const message: Payload = {
+            name,
+            text,
+        }
+
+        socket.emit('msgToServer', message);
+        setText('');
+    }
+  }
 
   return (
       <div className="bg-gray-100 flex justify-center items-center h-screen">
@@ -34,16 +90,23 @@ const Chat: NextPage = () => {
                         Here is a short comment about this employee.
                     </div>
                 </div> */}
-                <div className="clearfix">
-                    <div className="bg-gray-300 w-3/4 mx-4 my-2 p-2 rounded-3xl rounded-bl-none"><strong>Leandro: </strong>oi</div>
-                </div>
-                <div className="clearfix">
-                    <div className="bg-gray-300 w-3/4 mx-4 my-2 p-2  rounded-3xl rounded-bl-none"><strong>Leandro: </strong>tudo bem?</div>
-                </div>
-                <div className="clearfix">
-                    <div className="bg-green-300 float-right w-3/4 mx-4 my-2 p-2 rounded-3xl rounded-br-none clearfix"><strong>Sheila: </strong>Tudo e vc?</div>
-                </div>
-                    
+
+                {messages.map(message => {
+                    if(message.name === name) {
+                        return (
+                            <div className="clearfix" key={message.id}>
+                                <div className="bg-gray-300 w-3/4 mx-4 my-2 p-2 rounded-3xl rounded-bl-none"><strong>{message.name}: </strong>{message.text}</div>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div className="clearfix" key={message.id}>
+                            <div className="bg-green-300 float-right w-3/4 mx-4 my-2 p-2 rounded-3xl rounded-br-none clearfix"><strong>{message.name}: </strong>{message.text}</div>
+                        </div>
+                    );
+
+                })}
 
             </div>
 
@@ -51,8 +114,9 @@ const Chat: NextPage = () => {
                 <div className="flex items-center pt-4 pb-4 px-4">
                     <div className="ml-4">
                         <form action="">
-                            <input type="text" name="message" id="message" className="px-2 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
-                            <button className="w-2/2 px-6 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900">Enviar</button>
+                            <input type="text" name="name" id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Entre com seu nome" className="px-2 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
+                            <input type="text" name="text" id="text" value={text} onChange={e => setText(e.target.value)} placeholder="Entre com sua mensagem" className="px-2 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
+                            <button className="w-2/2 px-6 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900" type="button" onClick={() => {sendMessage()}}>Enviar</button>
                         </form>
                     </div>
                 </div>
