@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import io from 'socket.io-client';
+import Cookies from 'js-cookie';
 import { parseCookies } from '../services/cookies';
 import { getPayload, isTokenExpired } from '../services/auth';
 import api from '../services/api';
@@ -96,6 +97,11 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
     router.push('/rooms');
   }
 
+  function setLogout() {
+    Cookies.remove('token');
+    router.push('/');
+  }
+
   return (
       <div className="bg-gray-100 flex justify-center items-center h-screen">
         <div className="w-2/1 flex flex-col bg-white shadow-lg overflow-hidden">
@@ -114,6 +120,7 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
                 </svg>
                 </a>
                 <h3 className="">{room}</h3>
+                <a href="#" onClick={() => {setLogout()}}>Sair</a>
             </div>
             
             <div className="flex-grow h-96 overflow-y-auto">
