@@ -92,10 +92,8 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
 
   function changeRoom() {
     socket.emit('leaveRoom', room);
-
-    const router = useRouter()
-    return router.replace('/rooms')
-
+    setRoom('');
+    router.push('/rooms');
   }
 
   return (

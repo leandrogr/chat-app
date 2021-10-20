@@ -1,5 +1,6 @@
 import type { NextPage } from 'next'
 import { useEffect, useState } from 'react'
+import Link from 'next/link';
 
 import api from '../services/api';
 
@@ -67,7 +68,7 @@ const Register: NextPage = () => {
             </div>
             <div className="flex items-baseline justify-between">
               <button className="px-6 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900">Criar Conta</button>
-              <a href="#" className="text-sm text-blue-600 hover:underline">Já tem uma conta? Entre</a>
+              <span className="text-sm text-blue-600 hover:underline"><Link href="/">Já tem uma conta? Entre</Link></span>
             </div>
           </div>
         </form>
