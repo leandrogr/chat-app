@@ -1,10 +1,20 @@
-import type { NextPage } from 'next'
-import Router from 'next/router';
+import type { GetServerSideProps, NextPage } from 'next'
+import Router, { useRouter } from 'next/router';
 import { useEffect, useState } from 'react'
+import { withAuth } from '../hof/withAuth';
 
 import api from '../services/api'
+import { isTokenExpired } from '../services/auth';
+import { parseCookies } from '../services/cookies';
 
-const Rooms: NextPage = () => {
+interface PrivatePageProps {
+  email: string;
+  payload: any;
+}
+
+const Rooms: NextPage<PrivatePageProps> = (props) => {
+
+  console.log(props.payload);
 
   const [roomsList, setRoomsList] = useState([]);
   const [name, setName] = useState(null);
@@ -42,7 +52,7 @@ const Rooms: NextPage = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="px-8 py-6 mt-4 text-left bg-white shadow-lg">
-        <h3 className="text-2xl font-bold text-center">Salas</h3>
+        <h3 className="text-2xl font-bold text-center">{props.email}</h3>
         <form action="" onSubmit={handleSubmit}>
           <div className="mt-4">
             <div className="mt-4">
@@ -77,3 +87,38 @@ const Rooms: NextPage = () => {
 }
 
 export default Rooms
+
+export const getServerSideProps = withAuth(
+  async (ctx: any, cookies: any, payload: any) => {
+      console.log(cookies);
+    const { data } = await api.get("test-auth", {
+      headers: {
+        Authorization: `Bearer ${cookies.token}`,
+      },
+    });
+    return {
+      props: data,
+    };
+  }
+);
+
+// export const getServerSideProps: GetServerSideProps = async (ctx) => {
+
+//   const cookies: {} = parseCookies(ctx.req);
+
+//   if (!cookies.token || isTokenExpired(cookies.token)) {
+//     return {
+//       redirect: {
+//         permanent: false,
+//         destination: '/',
+//       }
+//     }
+//   }
+
+//   console.log(cookies);
+//   return{
+//     props: {
+
+//     }
+//   }
+// };
