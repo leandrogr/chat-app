@@ -18,7 +18,7 @@ const validationRegister = yup.object().shape({
 
 const Register: NextPage = () => {
 
-  const {register, handleSubmit, formState: { errors }} = useForm({
+  const {register, handleSubmit, reset, formState: { errors }} = useForm({
     resolver: yupResolver(validationRegister)
   })
 
@@ -31,6 +31,7 @@ const Register: NextPage = () => {
 
       try {
         await api.post("users", resp)
+        reset()
         setName([]);
         setEmail([]);
         setPassword([]);

@@ -119,8 +119,8 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
                     />
                 </svg>
                 </a>
-                <h3 className="">{room}</h3>
-                <a href="#" onClick={() => {setLogout()}}>Sair</a>
+                <h3 className="w-2/2 px-2 py-2 mr-5 mt-4 text-white bg-gray-800 rounded-lg hover:bg-gray-600">{room}</h3>
+                <button type="button" className="w-2/2 px-2 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900" onClick={() => {setLogout()}}>Sair</button>
             </div>
             
             <div className="flex-grow h-96 overflow-y-auto">
