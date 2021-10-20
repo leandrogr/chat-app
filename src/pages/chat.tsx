@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import io from 'socket.io-client';
 import { parseCookies } from '../services/cookies';
 import { getPayload, isTokenExpired } from '../services/auth';
+import api from '../services/api';
 
 interface Message {
     id: string;
@@ -30,6 +31,7 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
 
   const router = useRouter()
   const {id} = router.query
+  const room_id = id;
 //   console.log("ID SALA: ", id);
 
   const [title] = useState('Chat Web');
@@ -39,12 +41,16 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    if(props.email === "sheilacessel@gmail.com") {
-        socket.emit('joinRoom', "SALA1");
-    } else {
-        socket.emit('joinRoom', "SALA2");
-    }
 
+    api.get("rooms/" + room_id)
+    .then(res => {
+      const {name} = res.data;
+      setRoom(name);
+    })
+    .catch(err => console.log(err))
+    
+    socket.emit('joinRoom', room);
+    
     function receivedMessage(message: Payload) {
         const newMessage: Message = {
             id: uuidv4(),
@@ -75,6 +81,7 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
         }
 
         message.name = props.email;
+        message.room = room;
         
         console.log("MENSAGEM A ENVIAR: ", message);
 
@@ -83,12 +90,20 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
     }
   }
 
+  function changeRoom() {
+    socket.emit('leaveRoom', room);
+
+    const router = useRouter()
+    return router.replace('/rooms')
+
+  }
+
   return (
       <div className="bg-gray-100 flex justify-center items-center h-screen">
         <div className="w-2/1 flex flex-col bg-white shadow-lg overflow-hidden">
             
             <div className="bg-gray-200 text-black text-lg px-6 py-4 flex items-center">
-                <a href="/rooms" >
+                <a href="#" onClick={() => {changeRoom()}}>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -100,7 +115,7 @@ const Chat: NextPage<PrivatePageProps> = (props) => {
                     />
                 </svg>
                 </a>
-                <h3 className="">Chat1 {props.email}</h3>
+                <h3 className="">{room}</h3>
             </div>
             
             <div className="flex-grow h-96 overflow-y-auto">
