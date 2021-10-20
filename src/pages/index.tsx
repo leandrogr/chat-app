@@ -25,39 +25,10 @@ const Home: NextPage = () => {
   const onLogin = async (resp: any) => {
 
     const {data} = await api.post("auth/login", resp)
-    console.log("DATA: ", data.token);
     setCookie('token', data.token)
     router.push('/rooms');
    
-
   }
-
-  // async function onSubmit(event: FormEvent): Promise<void> {
-  //   event.preventDefault();
-
-  //   const email: string = (document.querySelector('#username') as HTMLInputElement).value;
-  //   const password: string = (document.querySelector('#password') as HTMLInputElement).value;
-
-  //   // const data = {
-  //   //   email,
-  //   //   password,
-  //   // };
-  //   // console.log("USER_FORM: ", data);
-    
-  //   const { data }  = await api.post("auth/login", {email, password})
-  //   setCookie('token', data.token)
-  //   router.push('/rooms');
-  //   //console.log("RESPONSE: ", data);
-  //   // try {
-  //   //   //await api.post("users", data)
-  //   // } catch (err) {
-  //   //   alert(
-  //   //     err?.response?.data?.error || 'Houve um problema na criação da sala'
-  //   //   );
-  //   // }
-    
-
-  // }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -68,7 +39,7 @@ const Home: NextPage = () => {
             <div className="mt-4">
               <label htmlFor="email">Email</label>
               <input type="text" name="email" id="email" {...register("email")} placeholder="Email" className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
-              <p className="text-red-500 text-xs italic">{errors.username?.message}</p>
+              <p className="text-red-500 text-xs italic">{errors.email?.message}</p>
             </div>
             <div className="mt-4">
               <label htmlFor="password">Senha</label>
