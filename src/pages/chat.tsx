@@ -1,41 +1,56 @@
-import type { NextPage } from 'next'
+import type { GetServerSideProps, NextPage } from 'next'
 import { useRouter, Router } from 'next/router'
 import React, { useEffect, useState } from 'react';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import io from 'socket.io-client';
+import { parseCookies } from '../services/cookies';
+import { getPayload, isTokenExpired } from '../services/auth';
 
 interface Message {
     id: string;
     name: string;
     text: string;
+    room: string;
 }
 
 interface Payload {
     name: string;
     text: string;
+    room: string;
 }
+
+interface PrivatePageProps {
+    payload: any;
+  }
 
 const socket = io('http://localhost:3333');
 
-const Chat: NextPage = () => {
+const Chat: NextPage<PrivatePageProps> = (props) => {
 
   const router = useRouter()
   const {id} = router.query
-  console.log("ID SALA: ", id);
+//   console.log("ID SALA: ", id);
 
   const [title] = useState('Chat Web');
   const [name, setName] = useState('');
   const [text, setText] = useState('');
+  const [room, setRoom] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
+    if(props.email === "sheilacessel@gmail.com") {
+        socket.emit('joinRoom', "SALA1");
+    } else {
+        socket.emit('joinRoom', "SALA2");
+    }
 
     function receivedMessage(message: Payload) {
         const newMessage: Message = {
-            id: uuid,
+            id: uuidv4(),
             name: message.name,
             text: message.text,
+            room: message.room,
         }
 
         setMessages([...messages, newMessage]);
@@ -48,7 +63,7 @@ const Chat: NextPage = () => {
   }, [messages, name, text]);
 
   function validateInput() {
-      return name.length > 0 && text.length > 0;
+      return text.length > 0;
   }
 
   function sendMessage() {
@@ -56,7 +71,12 @@ const Chat: NextPage = () => {
         const message: Payload = {
             name,
             text,
+            room,
         }
+
+        message.name = props.email;
+        
+        console.log("MENSAGEM A ENVIAR: ", message);
 
         socket.emit('msgToServer', message);
         setText('');
@@ -80,18 +100,15 @@ const Chat: NextPage = () => {
                     />
                 </svg>
                 </a>
-                <h3 className="">Chat1</h3>
+                <h3 className="">Chat1 {props.email}</h3>
             </div>
             
             <div className="flex-grow h-96 overflow-y-auto">
-                
-                {/* <div className="px-6 py-4 border-gray-200">
-                    <div className="border rounded-lg p-4 bg-gray-200">
-                        Here is a short comment about this employee.
-                    </div>
-                </div> */}
+                {messages.map(message  => {
 
-                {messages.map(message => {
+                    console.log("MESSAGE NAME: ", message.name)
+                    console.log("MESSAGE NAME: ", name)                   
+
                     if(message.name === name) {
                         return (
                             <div className="clearfix" key={message.id}>
@@ -114,7 +131,6 @@ const Chat: NextPage = () => {
                 <div className="flex items-center pt-4 pb-4 px-4">
                     <div className="ml-4">
                         <form action="">
-                            <input type="text" name="name" id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Entre com seu nome" className="px-2 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                             <input type="text" name="text" id="text" value={text} onChange={e => setText(e.target.value)} placeholder="Entre com sua mensagem" className="px-2 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                             <button className="w-2/2 px-6 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900" type="button" onClick={() => {sendMessage()}}>Enviar</button>
                         </form>
@@ -128,3 +144,25 @@ const Chat: NextPage = () => {
 }
 
 export default Chat
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+
+    const cookies: {} = parseCookies(ctx.req);
+  
+    if (!cookies.token || isTokenExpired(cookies.token)) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/',
+        }
+      }
+    }
+  
+    const payload = getPayload(cookies.token);
+  
+    console.log(cookies);
+    return{
+      props: payload,
+    }
+  };
+  

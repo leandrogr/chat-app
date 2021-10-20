@@ -9,7 +9,7 @@ export function withAuth(func: any) {
       return {
         redirect: {
           permanent: false,
-          destination: "/login",
+          destination: "/",
         },
       };
     }

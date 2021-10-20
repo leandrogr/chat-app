@@ -5,6 +5,8 @@ import api from '../services/api';
 
 const Register: NextPage = () => {
 
+  console.log("TESTE");
+
   const [name, setName] = useState([]);
   const [email, setEmail] = useState([]);
   const [password, setPassword] = useState([]);

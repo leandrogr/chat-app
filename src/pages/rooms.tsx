@@ -1,20 +1,18 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import Router, { useRouter } from 'next/router';
 import { useEffect, useState } from 'react'
-import { withAuth } from '../hof/withAuth';
 
 import api from '../services/api'
-import { isTokenExpired } from '../services/auth';
+import { getPayload, isTokenExpired } from '../services/auth';
 import { parseCookies } from '../services/cookies';
 
 interface PrivatePageProps {
-  email: string;
   payload: any;
 }
 
 const Rooms: NextPage<PrivatePageProps> = (props) => {
 
-  console.log(props.payload);
+  console.log(props.email);
 
   const [roomsList, setRoomsList] = useState([]);
   const [name, setName] = useState(null);
@@ -23,14 +21,13 @@ const Rooms: NextPage<PrivatePageProps> = (props) => {
     api.get("rooms")
       .then(res => {
         const roomsList = res.data;
-        setRoomsList(roomsList);
+        setRoomsList([...roomsList, roomsList]);
       })
       .catch(err => console.log(err))
   }
   
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("SUBMETEU nome", name);
 
     const data = {
       name,
@@ -38,6 +35,7 @@ const Rooms: NextPage<PrivatePageProps> = (props) => {
 
     try {
       await api.post("rooms", data)
+      getRooms();
     } catch (err) {
       alert(
         err?.response?.data?.error || 'Houve um problema na criação da sala'
@@ -47,16 +45,16 @@ const Rooms: NextPage<PrivatePageProps> = (props) => {
 
   useEffect(() => {
     getRooms();
-  }, [roomsList]);
+  }, []);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="px-8 py-6 mt-4 text-left bg-white shadow-lg">
-        <h3 className="text-2xl font-bold text-center">{props.email}</h3>
+        <h3 className="text-2xl font-bold text-center">Chat {props.email}</h3>
         <form action="" onSubmit={handleSubmit}>
           <div className="mt-4">
             <div className="mt-4">
-              <input type="text" name="name" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Sala" className="w-full px-2 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
+              <input type="text" name="name" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Sala" className="px-2 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
               <button type="submit" className="px-2 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900">Criar</button>
             </div>
           </div>
@@ -88,37 +86,23 @@ const Rooms: NextPage<PrivatePageProps> = (props) => {
 
 export default Rooms
 
-export const getServerSideProps = withAuth(
-  async (ctx: any, cookies: any, payload: any) => {
-      console.log(cookies);
-    const { data } = await api.get("test-auth", {
-      headers: {
-        Authorization: `Bearer ${cookies.token}`,
-      },
-    });
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+
+  const cookies: {} = parseCookies(ctx.req);
+
+  if (!cookies.token || isTokenExpired(cookies.token)) {
     return {
-      props: data,
-    };
+      redirect: {
+        permanent: false,
+        destination: '/',
+      }
+    }
   }
-);
 
-// export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const payload = getPayload(cookies.token);
 
-//   const cookies: {} = parseCookies(ctx.req);
-
-//   if (!cookies.token || isTokenExpired(cookies.token)) {
-//     return {
-//       redirect: {
-//         permanent: false,
-//         destination: '/',
-//       }
-//     }
-//   }
-
-//   console.log(cookies);
-//   return{
-//     props: {
-
-//     }
-//   }
-// };
+  console.log(cookies);
+  return{
+    props: payload,
+  }
+};
